@@ -19,6 +19,13 @@ package org.apache.ibatis.parsing;
  * @author Clinton Begin
  */
 public interface TokenHandler {
+
+  /**
+   * 处理 Token
+   *
+   * @param content token 字符串
+   * @return
+   */
   String handleToken(String content);
 }
 

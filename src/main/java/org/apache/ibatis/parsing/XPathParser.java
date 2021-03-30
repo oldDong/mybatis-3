@@ -15,12 +15,11 @@
  */
 package org.apache.ibatis.parsing;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import org.apache.ibatis.builder.BuilderException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.*;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -29,27 +28,44 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-
-import org.apache.ibatis.builder.BuilderException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
+ * 基于 Java XPath 解析器，用于解析 Mybatis mybatis-config.xml 和 *Mapper.xml等 XML 配置文件
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
 public class XPathParser {
 
+  /**
+   * XML Document 对象
+   */
   private final Document document;
+
+  /**
+   * 是否校验
+   */
   private boolean validation;
+
+  /**
+   * XML 实体解析器
+   */
   private EntityResolver entityResolver;
+
+  /**
+   * 变量 Properties 对象
+   */
   private Properties variables;
+
+  /**
+   * Java XPath 对象
+   */
   private XPath xpath;
 
   public XPathParser(String xml) {
@@ -230,6 +246,7 @@ public class XPathParser {
   private Document createDocument(InputSource inputSource) {
     // important: this must only be called AFTER common constructor
     try {
+      // 创建 DocumentBuilderFactory 对象
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
       factory.setValidating(validation);
@@ -240,7 +257,9 @@ public class XPathParser {
       factory.setCoalescing(false);
       factory.setExpandEntityReferences(true);
 
+      // 创建 DocumentBuilder 对象
       DocumentBuilder builder = factory.newDocumentBuilder();
+      // 设置实体解析器
       builder.setEntityResolver(entityResolver);
       builder.setErrorHandler(new ErrorHandler() {
         @Override
@@ -258,6 +277,7 @@ public class XPathParser {
           // NOP
         }
       });
+      // 解析 XML 文件
       return builder.parse(inputSource);
     } catch (Exception e) {
       throw new BuilderException("Error creating document instance.  Cause: " + e, e);
